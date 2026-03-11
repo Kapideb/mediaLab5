@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Lab 3 - Option A - Ugnius</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+    <script>
+    
+      AFRAME.registerComponent('complex-threejs-model', {
+        init: function () {
+          
+          const group = new THREE.Group();
+
+          // 2. Namo pagrindas 
+          const baseGeo = new THREE.BoxGeometry(1, 1, 1);
+          const baseMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); 
+          const base = new THREE.Mesh(baseGeo, baseMat);
+          base.position.set(0, 0.5, 0); 
+          group.add(base);
+
+          // 3. Stogas 
+          const roofGeo = new THREE.ConeGeometry(0.8, 0.8, 4);
+          const roofMat = new THREE.MeshLambertMaterial({ color: 0xDC143C }); 
+          const roof = new THREE.Mesh(roofGeo, roofMat);
+          roof.position.set(0, 1.4, 0); // Uždėdame ant pagrindo viršaus
+          roof.rotation.y = Math.PI / 4; // Pasukame 45 laipsniais 
+          group.add(roof);
+
+          // 4. Durys 
+          const doorGeo = new THREE.BoxGeometry(0.3, 0.6, 0.1);
+          const doorMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+          const door = new THREE.Mesh(doorGeo, doorMat);
+          door.position.set(0, 0.3, 0.51); // Išstumiame šiek tiek į priekį
+          group.add(door);
+
+          this.el.setObject3D('mesh', group);
+        }
+      });
+    </script>
+  </head>
+  <body style="margin: 0; overflow: hidden;">
+    
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      
+      <a-marker preset="hiro">
+        <a-entity complex-threejs-model></a-entity>
+      </a-marker>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+
+  </body>
+</html>
