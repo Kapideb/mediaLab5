@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lab 5 - WebRTC Base64 Stream (Option A)</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+        .video-container { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .box { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        video, img { width: 320px; height: 240px; background: #000; border-radius: 4px; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <h2>WebRTC Video transliavimas (Base64 per DataChannel)</h2>
+    <button id="startBtn">Pradėti transliaciją</button>
+
+    <div class="video-container">
+        <div class="box">
+            <h3>Siuntėjas (Kamera)</h3>
+            <video id="localVideo" autoplay playsinline></video>
+        </div>
+        <div class="box">
+            <h3>Gavėjas (Iškoduotas Base64)</h3>
+            <img id="remoteImage" alt="Laukiama vaizdo...">
+        </div>
+    </div>
+
+    <canvas id="canvas" width="320" height="240"></canvas>
+
+    <script>
+        const localVideo = document.getElementById('localVideo');
+        const remoteImage = document.getElementById('remoteImage');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+
+        let localConnection, remoteConnection, sendChannel, receiveChannel;
+
+        startBtn.onclick = async () => {
+            startBtn.disabled = true;
+
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            localVideo.srcObject = stream;
+
+            
+            localConnection = new RTCPeerConnection();
+            remoteConnection = new RTCPeerConnection();
+
+            
+            localConnection.onicecandidate = e => e.candidate && remoteConnection.addIceCandidate(e.candidate);
+            remoteConnection.onicecandidate = e => e.candidate && localConnection.addIceCandidate(e.candidate);
+
+            // 3. Sukuriame duomenų kanalą (DataChannel) Base64 siuntimui
+            sendChannel = localConnection.createDataChannel("sendDataChannel");
+            remoteConnection.ondatachannel = (event) => {
+                receiveChannel = event.channel;
+                receiveChannel.onmessage = (e) => {
+                    // Priimame Base64 tekstą ir atvaizduojame kaip nuotrauką
+                    remoteImage.src = e.data;
+                };
+            };
+
+            
+            const offer = await localConnection.createOffer();
+            await localConnection.setLocalDescription(offer);
+            await remoteConnection.setRemoteDescription(offer);
+
+            const answer = await remoteConnection.createAnswer();
+            await remoteConnection.setLocalDescription(answer);
+            await localConnection.setRemoteDescription(answer);
+
+           
+            setInterval(() => {
+                if (sendChannel.readyState === "open") {
+                    ctx.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
+                    // Užkoduojame kadrą į Base64 eilutę (Option A reikalavimas)
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.5); 
+                    sendChannel.send(base64Data);
+                }
+            }, 100);
+        };
+    </script>
+</body>
+</html>

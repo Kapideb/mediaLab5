@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Lab2 - VR application (Kapideb)</title>
+    <meta name="description" content="Basic example for Point Cloud component.">
+    
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="js/aframe-pointcloud-component.js"></script>
+
+    <style>
+      #ui-container {
+        position: absolute;
+        z-index: 1000; 
+        bottom: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: sans-serif;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      }
+      button {
+        margin: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+      }
+      button:hover { background-color: #e2e6ea; }
+    </style>
+  </head>
+  <body>
+
+    <a-scene>
+      <a-assets>
+        <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+        <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
+      </a-assets>
+
+      <a-plane src="#groundTexture" rotation="-90 0 0" height="100" width="100"></a-plane>
+      <a-light type="ambient" color="#445451"></a-light>
+      <a-light type="point" intensity="2" position="2 4 4"></a-light>
+      <a-sky height="2048" radius="30" src="#skyTexture" theta-length="90" width="2048"></a-sky>
+      <a-entity laser-controls line="color: red; opacity: 0.75"></a-entity>
+      
+      <a-pointcloud 
+        id="main-model"
+        scale="0.1 0.1 0.1" 
+        position="0 0.08 -2.5" 
+        rotation="-90 45 0" 
+        src="url(sculpt.ply)" 
+        size="0.01">
+      </a-pointcloud>
+    </a-scene>
+
+    <script>
+      const model = document.querySelector('#main-model');
+
+      function rotateModel() {
+        let rot = model.getAttribute('rotation');
+        model.setAttribute('rotation', { x: rot.x, y: rot.y + 45, z: rot.z });
+      }
+
+      function moveModel() {
+        let pos = model.getAttribute('position');
+        model.setAttribute('position', { x: pos.x + 0.5, y: pos.y, z: pos.z });
+      }
+
+      function zoomModel() {
+        let scale = model.getAttribute('scale');
+        model.setAttribute('scale', { x: scale.x * 1.2, y: scale.y * 1.2, z: scale.z * 1.2 });
+      }
+    </script>
+  </body>
+</html>

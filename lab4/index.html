@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Filter - Kapideb (Option A)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        canvas {
+            background-color: #000;
+            border: 3px solid #333;
+            border-radius: 8px;
+            max-width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .controls {
+            margin: 20px auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        input[type="range"] {
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>WebRTC: Dinaminis "Threshold" Filtras</h2>
+    
+    <div class="controls">
+        <label for="thresholdSlider">Filtro lygis (Threshold): <span id="sliderValue">100</span></label><br><br>
+        <input type="range" id="thresholdSlider" min="0" max="255" value="100">
+    </div>
+    
+    <br>
+
+    <video id="video" playsinline autoplay style="display: none;"></video>
+    
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const slider = document.getElementById('thresholdSlider');
+        const sliderValue = document.getElementById('sliderValue');
+
+        slider.addEventListener('input', () => {
+            sliderValue.textContent = slider.value;
+        });
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Kameros klaida: ", err);
+                alert("Nepavyko pasiekti kameros! Būtinai paleiskite per Live Server.");
+            });
+
+        
+        video.addEventListener('loadedmetadata', () => {
+           
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            requestAnimationFrame(processFrame);
+        });
+
+        function processFrame() {
+            if (video.paused || video.ended) return;
+
+           
+            if (canvas.width === 0) return; 
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            let frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let data = frame.data;
+            let threshold = parseInt(slider.value);
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i+1];
+                let b = data[i+2];
+
+                let brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+                let color = (brightness >= threshold) ? 255 : 0;
+
+                data[i] = color;    
+                data[i+1] = color;  
+                data[i+2] = color;  
+            }
+
+            ctx.putImageData(frame, 0, 0);
+            requestAnimationFrame(processFrame);
+        }
+    </script>
+</body>
+</html>

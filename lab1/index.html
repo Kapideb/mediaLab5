@@ -1,0 +1,81 @@
+<h1>HLS player'is</h1>
+
+<video id="player" width="720" controls></video>
+
+<br><br>
+
+<button onclick="playVid()">Play</button>
+<button onclick="pauseVid()">Pause</button>
+<button onclick="stopVid()">Stop</button>
+<button onclick="forward()">Jump to 5 sec forward</button>
+<button onclick="back()">Jump to 5 sec backwards</button>
+
+<p>Playlist</p>
+
+<input type="text" id="url1" size="100"
+value="https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8">
+<button onclick="loadVideo('url1')">Load</button>
+<br><br>
+
+<input type="text" id="url2" size="100"
+value="https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8">
+<button onclick="loadVideo('url2')">Load</button>
+
+<br><br>
+<button onclick="shuffle()">Shuffle</button>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+const video = document.getElementById("player");
+let hls;
+
+function playVid(){ video.play(); }
+function pauseVid(){ video.pause(); }
+function stopVid(){ video.pause(); video.currentTime = 0; }
+function forward(){ video.currentTime += 5; }
+function back(){ video.currentTime -= 5; }
+
+function loadVideo(inputId){
+    const url = document.getElementById(inputId).value;
+
+    if(Hls.isSupported()){
+        if(hls) hls.destroy();
+
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+    }
+    else if(video.canPlayType("application/vnd.apple.mpegurl")){
+        video.src = url;
+        video.play();
+    }
+}
+
+function shuffle(){
+    const urls = [
+        document.getElementById("url1").value,
+        document.getElementById("url2").value
+    ];
+
+    const random = urls[Math.floor(Math.random()*urls.length)];
+
+    loadVideoFromShuffle(random);
+}
+
+function loadVideoFromShuffle(url){
+    if(Hls.isSupported()){
+        if(hls) hls.destroy();
+
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+    }
+}
+</script>
